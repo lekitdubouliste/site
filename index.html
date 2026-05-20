@@ -327,10 +327,10 @@
         }
         .carousel-fullscreen-btn:hover { background:#C84B31; }
         .carousel-counter {
-            position:absolute; top:12px; left:12px;
+            position:absolute; top:12px; left:12px; display:none;
             background:rgba(0,0,0,0.5); color:white; font-size:0.85em;
             padding:5px 10px; border-radius:6px; z-index:10;
-            font-family:'Open Sans',Arial,sans-serif; display:none;
+            font-family:'Open Sans',Arial,sans-serif;
         }
         .carousel-thumbnails {
             display:flex; gap:8px; padding:10px 12px; overflow-x:auto;
@@ -357,19 +357,22 @@
         .lightbox {
             display:none; position:fixed; inset:0;
             background:rgba(0,0,0,0.93); z-index:9999;
-            align-items:center; justify-content:center;
+            align-items:center; justify-content:center; flex-direction:column;
         }
         .lightbox.open { display:flex; }
-        .lightbox img   { max-width:92vw; max-height:85vh; object-fit:contain; border-radius:8px; }
-        .lightbox video { max-width:92vw; max-height:85vh; border-radius:8px; }
+        .lightbox img   { max-width:92vw; max-height:82vh; object-fit:contain; border-radius:8px; }
+        .lightbox video { max-width:92vw; max-height:82vh; border-radius:8px; }
         .lightbox-close {
             position:absolute; top:18px; right:24px;
             color:white; font-size:2em; background:none; border:none; cursor:pointer; line-height:1;
         }
         .lightbox-caption {
-            position:absolute; bottom:20px; left:0; right:0;
-            text-align:center; color:#ccc;
-            font-family:'Open Sans',Arial,sans-serif; font-size:0.95em;
+            margin-top:12px; color:#ccc;
+            font-family:'Open Sans',Arial,sans-serif; font-size:0.95em; text-align:center;
+        }
+        .lightbox-counter {
+            position:absolute; top:18px; left:24px;
+            color:#ccc; font-family:'Open Sans',Arial,sans-serif; font-size:0.9em;
         }
         .lightbox-nav {
             position:absolute; top:50%; transform:translateY(-50%);
@@ -379,6 +382,17 @@
         }
         .lightbox-nav.prev { left:16px; }
         .lightbox-nav.next { right:16px; }
+        .lightbox-pause {
+            position:absolute; bottom:18px; right:24px;
+            background:rgba(255,255,255,0.15); border:none; color:white;
+            padding:6px 14px; border-radius:20px; cursor:pointer; font-size:0.85em;
+            font-family:'Open Sans',Arial,sans-serif;
+        }
+        .lightbox-pause:hover { background:rgba(200,75,49,0.7); }
+        .lightbox-progress {
+            position:absolute; bottom:0; left:0; height:3px;
+            background:#C84B31; transition:width linear;
+        }
 
         /* ========== FORMULAIRE ========== */
         .form-group {
@@ -833,7 +847,6 @@
                 <div class="section">
                     <h2>Galerie de l'atelier</h2>
 
-                    <!-- CARROUSEL -->
                     <div class="carousel-wrapper" id="carouselWrapper">
                         <div class="carousel-main" id="carouselMain">
                             <div class="carousel-loading" id="carouselLoading">⏳ Chargement de la galerie…</div>
@@ -846,91 +859,76 @@
                         <div class="carousel-thumbnails" id="carouselThumbs"></div>
                     </div>
 
-                    <!-- LIGHTBOX -->
                     <div class="lightbox" id="lightbox">
                         <button class="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
-                        <button class="lightbox-nav prev" onclick="lightboxMove(-1)">&#8249;</button>
+                        <span class="lightbox-counter" id="lbCounter"></span>
+                        <button class="lightbox-nav prev" onclick="lbMove(-1)">&#8249;</button>
                         <img id="lbImg" src="" alt="" style="display:none">
                         <video id="lbVideo" controls style="display:none"></video>
                         <div class="lightbox-caption" id="lbCaption"></div>
-                        <button class="lightbox-nav next" onclick="lightboxMove(1)">&#8250;</button>
+                        <button class="lightbox-nav next" onclick="lbMove(1)">&#8250;</button>
+                        <button class="lightbox-pause" id="lbPauseBtn" onclick="lbTogglePause()">⏸ Pause</button>
+                        <div class="lightbox-progress" id="lbProgress"></div>
                     </div>
 
                     <script>
-                    /* =========================================================
-                       GALERIE — lit media/galerie/manifest.json
-                       Format minimal (alt optionnel) :
-                       [
-                         { "src": "media/galerie/galerie1.jpg" },
-                         { "src": "media/galerie/video1.mp4", "alt": "Description" }
-                       ]
-                    ========================================================= */
-                    const MANIFEST = 'media/galerie/manifest.json';
-                    let medias = [];
-                    let carouselIdx = 0;
-                    let autoTimer = null;
+                    const MANIFEST  = 'media/galerie/manifest.json';
+                    const INTERVALLE = 2000; /* ← durée en ms (2000 = 2s) */
+
+                    let medias = [], carouselIdx = 0, autoTimer = null;
+                    let lbIdx = 0, lbTimer = null, lbPaused = false;
 
                     function isVideo(src) { return /\.(mp4|webm|ogg)$/i.test(src); }
-                    /* Extrait le nom de fichier sans extension comme légende de secours */
-                    function labelOf(m) {
-                        return m.alt || m.src.split('/').pop().replace(/\.[^.]+$/, '').replace(/[-_]/g,' ');
-                    }
+                    function labelOf(m)   { return m.alt || m.src.split('/').pop().replace(/\.[^.]+$/,'').replace(/[-_]/g,' '); }
 
-                    /* ---- Construction ---- */
+                    /* ======== CARROUSEL ======== */
                     function buildCarousel() {
                         const main  = document.getElementById('carouselMain');
                         const thumbs = document.getElementById('carouselThumbs');
                         document.getElementById('carouselLoading').remove();
-                        ['btnPrev','btnNext','btnFS','carouselCounter'].forEach(id => {
-                            document.getElementById(id).style.display = 'flex';
-                        });
-                        document.getElementById('btnFS').style.display = 'block';
+                        ['btnPrev','btnNext'].forEach(id => { document.getElementById(id).style.display='flex'; });
+                        document.getElementById('btnFS').style.display      = 'block';
                         document.getElementById('carouselCounter').style.display = 'block';
 
                         medias.forEach((m, i) => {
-                            /* slide */
                             const slide = document.createElement('div');
-                            slide.className = 'carousel-slide' + (i===0 ? ' active' : '');
+                            slide.className = 'carousel-slide' + (i===0?' active':'');
                             if (isVideo(m.src)) {
                                 const v = document.createElement('video');
-                                v.src = m.src; v.loop = true; v.muted = true; v.playsInline = true;
-                                if (i===0) v.play();
+                                v.src=m.src; v.loop=true; v.muted=true; v.playsInline=true;
+                                if(i===0) v.play();
                                 slide.appendChild(v);
                             } else {
                                 const img = document.createElement('img');
-                                img.src = m.src; img.alt = labelOf(m);
+                                img.src=m.src; img.alt=labelOf(m);
                                 img.onclick = () => openLightbox(i);
                                 slide.appendChild(img);
                             }
                             main.insertBefore(slide, document.getElementById('carouselCaption'));
 
-                            /* miniature */
                             const th = document.createElement('div');
-                            th.className = 'thumb' + (i===0 ? ' active' : '');
+                            th.className = 'thumb'+(i===0?' active':'');
                             th.onclick = () => carouselGoto(i);
                             if (isVideo(m.src)) {
                                 const v = document.createElement('video');
-                                v.src = m.src; v.muted = true; v.preload = 'metadata';
+                                v.src=m.src; v.muted=true; v.preload='metadata';
                                 th.appendChild(v);
                                 const b = document.createElement('span');
-                                b.className = 'vbadge'; b.textContent = '▶';
-                                th.appendChild(b);
+                                b.className='vbadge'; b.textContent='▶'; th.appendChild(b);
                             } else {
                                 const img = document.createElement('img');
-                                img.src = m.src; img.alt = labelOf(m);
-                                th.appendChild(img);
+                                img.src=m.src; img.alt=labelOf(m); th.appendChild(img);
                             }
                             thumbs.appendChild(th);
                         });
 
-                        updateUI();
+                        updateCarousel();
                         startAuto();
                         const w = document.getElementById('carouselWrapper');
                         w.addEventListener('mouseenter', () => clearInterval(autoTimer));
                         w.addEventListener('mouseleave', startAuto);
                     }
 
-                    /* ---- Navigation ---- */
                     function carouselGoto(n) {
                         const slides = document.querySelectorAll('.carousel-slide');
                         const thumbs = document.querySelectorAll('.thumb');
@@ -944,31 +942,36 @@
                         thumbs[carouselIdx].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
                         const inV = slides[carouselIdx].querySelector('video');
                         if (inV) inV.play();
-                        updateUI();
-                        restartAuto();
+                        updateCarousel(); restartAuto();
                     }
                     function carouselMove(d) { carouselGoto(carouselIdx + d); }
-                    function updateUI() {
+                    function updateCarousel() {
                         document.getElementById('carouselCaption').textContent = labelOf(medias[carouselIdx]);
                         document.getElementById('carouselCounter').textContent = (carouselIdx+1)+' / '+medias.length;
                     }
-                    function startAuto()   { autoTimer = setInterval(() => carouselMove(1), 4000); }
+                    function startAuto()   { autoTimer = setInterval(() => carouselMove(1), INTERVALLE); }
                     function restartAuto() { clearInterval(autoTimer); startAuto(); }
 
-                    /* ---- Lightbox ---- */
-                    let lbIdx = 0;
+                    /* ======== LIGHTBOX ======== */
                     function openLightbox(i) {
-                        lbIdx = i; lbUpdate();
+                        lbIdx = i; lbPaused = false;
+                        lbUpdate();
                         document.getElementById('lightbox').classList.add('open');
                         document.body.style.overflow = 'hidden';
+                        lbStartAuto();
                     }
                     function closeLightbox() {
+                        lbStopAuto();
                         const v = document.getElementById('lbVideo');
                         v.pause(); v.src = '';
                         document.getElementById('lightbox').classList.remove('open');
                         document.body.style.overflow = '';
                     }
-                    function lightboxMove(d) { lbIdx=(lbIdx+d+medias.length)%medias.length; lbUpdate(); }
+                    function lbMove(d) {
+                        lbIdx = (lbIdx + d + medias.length) % medias.length;
+                        lbUpdate();
+                        if (!lbPaused) { lbStopAuto(); lbStartAuto(); }
+                    }
                     function lbUpdate() {
                         const m = medias[lbIdx];
                         const img = document.getElementById('lbImg');
@@ -981,19 +984,49 @@
                             img.style.display=''; img.src=m.src; img.alt=labelOf(m);
                         }
                         document.getElementById('lbCaption').textContent = labelOf(m);
+                        document.getElementById('lbCounter').textContent  = (lbIdx+1)+' / '+medias.length;
+                        /* barre de progression */
+                        const bar = document.getElementById('lbProgress');
+                        bar.style.transition = 'none'; bar.style.width = '0%';
+                        if (!lbPaused) setTimeout(() => {
+                            bar.style.transition = 'width '+INTERVALLE+'ms linear';
+                            bar.style.width = '100%';
+                        }, 30);
                     }
+                    function lbStartAuto() {
+                        lbTimer = setInterval(() => lbMove(1), INTERVALLE);
+                        document.getElementById('lbPauseBtn').textContent = '⏸ Pause';
+                        const bar = document.getElementById('lbProgress');
+                        bar.style.transition = 'none'; bar.style.width = '0%';
+                        setTimeout(() => {
+                            bar.style.transition = 'width '+INTERVALLE+'ms linear';
+                            bar.style.width = '100%';
+                        }, 30);
+                    }
+                    function lbStopAuto() {
+                        clearInterval(lbTimer);
+                        const bar = document.getElementById('lbProgress');
+                        bar.style.transition = 'none'; bar.style.width = '0%';
+                    }
+                    function lbTogglePause() {
+                        lbPaused = !lbPaused;
+                        document.getElementById('lbPauseBtn').textContent = lbPaused ? '▶ Lecture' : '⏸ Pause';
+                        lbPaused ? lbStopAuto() : lbStartAuto();
+                    }
+
                     document.addEventListener('keydown', e => {
                         const lb = document.getElementById('lightbox');
                         if (!lb.classList.contains('open')) return;
-                        if (e.key==='Escape')      closeLightbox();
-                        if (e.key==='ArrowLeft')   lightboxMove(-1);
-                        if (e.key==='ArrowRight')  lightboxMove(1);
+                        if (e.key==='Escape')     closeLightbox();
+                        if (e.key==='ArrowLeft')  lbMove(-1);
+                        if (e.key==='ArrowRight') lbMove(1);
+                        if (e.key===' ')          { e.preventDefault(); lbTogglePause(); }
                     });
                     document.getElementById('lightbox').addEventListener('click', function(e){
                         if (e.target===this) closeLightbox();
                     });
 
-                    /* ---- Chargement manifest ---- */
+                    /* ======== CHARGEMENT MANIFEST ======== */
                     fetch(MANIFEST)
                         .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
                         .then(data => {
@@ -1001,9 +1034,9 @@
                             if (!medias.length) throw new Error('vide');
                             buildCarousel();
                         })
-                        .catch(err => {
+                        .catch(() => {
                             document.getElementById('carouselLoading').innerHTML =
-                                '📷 Galerie bientôt disponible<br><small style="color:#666">(' + MANIFEST + ' introuvable ou vide)</small>';
+                                '📷 Galerie bientôt disponible<br><small style="color:#666">('+MANIFEST+' introuvable)</small>';
                         });
                     </script>
                 </div>
