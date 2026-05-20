@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
-<!-- Mirrored from kitdubouliste.vercel.app/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 20 May 2026 06:45:39 GMT -->
-<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
 <head>
 	<!-- Google tag (gtag.js) -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-FGDRFQ4TMB"></script>
@@ -20,19 +17,19 @@
         /* ========== CHARGEMENT DES POLICES LOCALES ========== */
         @font-face {
             font-family: 'Archivo Black';
-            src: url('media/fonts/ArchivoBlack-Regular.html') format('truetype');
+            src: url('media/fonts/ArchivoBlack-Regular.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: 'Open Sans';
-            src: url('media/fonts/OpenSans-Regular.html') format('truetype');
+            src: url('media/fonts/OpenSans-Regular.ttf') format('truetype');
             font-weight: 400;
             font-style: normal;
         }
         @font-face {
             font-family: 'Open Sans';
-            src: url('media/fonts/OpenSans-Bold.html') format('truetype');
+            src: url('media/fonts/OpenSans-Bold.ttf') format('truetype');
             font-weight: 700;
             font-style: normal;
         }
@@ -288,26 +285,100 @@
         }
 
         /* ========== GALERIE PHOTOS ========== */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+        /* ========== CARROUSEL GALERIE ========== */
+        .carousel-wrapper {
+            position: relative; margin-top: 30px;
+            border-radius: 16px; overflow: hidden;
+            background: #111; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
         }
-
-        .gallery img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            cursor: pointer;
+        .carousel-main {
+            position: relative; width: 100%; height: 420px;
+            background: #000; overflow: hidden;
         }
-
-        .gallery img:hover {
-            transform: scale(1.05);
+        .carousel-slide {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            opacity: 0; transition: opacity 0.6s ease;
+            display: flex; align-items: center; justify-content: center;
         }
+        .carousel-slide.active { opacity: 1; }
+        .carousel-slide img  { width:100%; height:100%; object-fit:cover; cursor:pointer; }
+        .carousel-slide video { width:100%; height:100%; object-fit:contain; background:#000; }
+        .carousel-caption {
+            position: absolute; bottom:0; left:0; right:0; z-index:5;
+            background: linear-gradient(transparent, rgba(0,0,0,0.65));
+            color: white; padding: 30px 16px 12px; pointer-events:none;
+            font-family: 'Open Sans', Arial, sans-serif; font-size: 0.95em;
+        }
+        .carousel-nav {
+            position: absolute; top:50%; transform:translateY(-50%);
+            background: rgba(200,75,49,0.82); border:none; color:white;
+            font-size:1.6em; width:44px; height:44px; border-radius:50%;
+            cursor:pointer; display:none; align-items:center; justify-content:center;
+            transition:background 0.2s; z-index:10;
+        }
+        .carousel-nav:hover { background:#C84B31; }
+        .carousel-nav.prev { left:12px; }
+        .carousel-nav.next { right:12px; }
+        .carousel-fullscreen-btn {
+            position:absolute; top:12px; right:12px; display:none;
+            background:rgba(0,0,0,0.55); border:none; color:white;
+            font-size:1.1em; padding:7px 11px; border-radius:8px;
+            cursor:pointer; z-index:10; transition:background 0.2s;
+        }
+        .carousel-fullscreen-btn:hover { background:#C84B31; }
+        .carousel-counter {
+            position:absolute; top:12px; left:12px;
+            background:rgba(0,0,0,0.5); color:white; font-size:0.85em;
+            padding:5px 10px; border-radius:6px; z-index:10;
+            font-family:'Open Sans',Arial,sans-serif; display:none;
+        }
+        .carousel-thumbnails {
+            display:flex; gap:8px; padding:10px 12px; overflow-x:auto;
+            background:#1a1a1a; scrollbar-width:thin; scrollbar-color:#C84B31 #333;
+        }
+        .thumb {
+            width:80px; height:60px; flex-shrink:0; border-radius:6px;
+            overflow:hidden; cursor:pointer; position:relative;
+            border:2px solid transparent; opacity:0.55;
+            transition:opacity 0.2s, border-color 0.2s;
+        }
+        .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+        .thumb .vbadge {
+            position:absolute; inset:0; display:flex; align-items:center;
+            justify-content:center; color:white; font-size:1.4em;
+            background:rgba(0,0,0,0.35);
+        }
+        .thumb.active, .thumb:hover { opacity:1; border-color:#D4AF37; }
+        .carousel-loading {
+            color:#aaa; padding:80px 20px; text-align:center;
+            font-family:'Open Sans',Arial,sans-serif;
+        }
+        /* Lightbox */
+        .lightbox {
+            display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,0.93); z-index:9999;
+            align-items:center; justify-content:center;
+        }
+        .lightbox.open { display:flex; }
+        .lightbox img   { max-width:92vw; max-height:85vh; object-fit:contain; border-radius:8px; }
+        .lightbox video { max-width:92vw; max-height:85vh; border-radius:8px; }
+        .lightbox-close {
+            position:absolute; top:18px; right:24px;
+            color:white; font-size:2em; background:none; border:none; cursor:pointer; line-height:1;
+        }
+        .lightbox-caption {
+            position:absolute; bottom:20px; left:0; right:0;
+            text-align:center; color:#ccc;
+            font-family:'Open Sans',Arial,sans-serif; font-size:0.95em;
+        }
+        .lightbox-nav {
+            position:absolute; top:50%; transform:translateY(-50%);
+            background:rgba(200,75,49,0.75); border:none; color:white;
+            font-size:1.8em; width:50px; height:50px; border-radius:50%;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+        }
+        .lightbox-nav.prev { left:16px; }
+        .lightbox-nav.next { right:16px; }
 
         /* ========== FORMULAIRE ========== */
         .form-group {
@@ -463,10 +534,8 @@
                 gap: 20px;
             }
 
-            /* Galerie sur une colonne */
-            .gallery {
-                grid-template-columns: 1fr;
-            }
+            .carousel-main { height: 260px; }
+            .thumb { width:60px; height:45px; }
 
             /* Prix plus petit */
             .pricing-card {
@@ -621,7 +690,7 @@
                         </div>
                         <div class="product-item">
                             <h3>📦 Kit complet</h3>
-                            <p>Tout le nécessaire pour jouer : mètre, cochonnet, marqueur de sol, compteur de points et chiffon.</p>
+                            <p>Tout le nécessaire pour jouer : mètre, cochonnet, marqueur de sol, compteur de points, ramasseur de boules magnétique et chiffon.</p>
                         </div>
                         <div class="product-item">
                             <h3>🎓 Projet pédagogique</h3>
@@ -678,9 +747,9 @@
                     <h2>Contenu du kit</h2>
                     <div class="product-grid">
                         <div class="product-item">
-                            <img src="media/images/kit_banc.jpg" alt="Boîte en bois" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%238B5A3C%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3EBoîte en bois%3C/text%3E%3C/svg%3E'">
+                            <img src="media/images/kit_ouvert.jpg" alt="Boîte en bois" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%238B5A3C%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3EBoîte en bois%3C/text%3E%3C/svg%3E'">
                             <h3>📦 Boîte en bois massif</h3>
-                            <p>Dimensions : 210 x 174 x 46 cm. En contreplaqué de bouleau, finition vernie. Empiècement par défonçage dans une mousse de densité D25.</p>
+                            <p>Dimensions : 210 x 174 x 46 cm. Flancs en hêtre massif, face et dos en okoumé, fermeture et charnière métalliques, finition au saturateur pour protéger des intempéries. Empiècement réalisé à la défonceuse numérique dans une mousse de densité D25.</p>
                             <p><b>Fabriqué et assemblé par nous, au lycée</b>.</p>
                         </div>
                         <div class="product-item">
@@ -694,13 +763,13 @@
                             <p>Acheté chez notre fournisseur, diamètre réglementaire de 30mm, couleur bois, résistante.</p>
                         </div>
                         <div class="product-item">
-                            <img src="media/images/marqueur.jpg" alt="Marqueur de sol" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%2366BB6A%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3EMarqueur de sol%3C/text%3E%3C/svg%3E'">
+                            <img src="media/images/marqueur2.jpg" alt="Marqueur de sol" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%2366BB6A%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3EMarqueur de sol%3C/text%3E%3C/svg%3E'">
                             <h3>⭕ Marqueur de sol</h3>
                             <p>Fabriqué en PLA (fibres : maïs et blé, liant : caséïne de lait) pour délimiter la zone de lancer et marquer l'emplacement du cochonnet. Dépliant, facile à transporter.</p>
                             <p><b>Fabriqué et assemblé par nous, au lycée</b>.</p>
                         </div>
                         <div class="product-item">
-                            <img src="media/images/compteur.html" alt="Compteur" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%234682B4%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3ECompteur de points%3C/text%3E%3C/svg%3E'">
+                            <img src="media/images/CP_couleur2.jpg" alt="Compteur" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22180%22%3E%3Crect width=%22300%22 height=%22180%22 fill=%22%234682B4%22/%3E%3Ctext x=%22150%22 y=%2295%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22%3ECompteur de points%3C/text%3E%3C/svg%3E'">
                             <h3>🔢 Compteur de points</h3>
                             <p>Système manuel rotatif pour suivre le score jusqu'à 13 points, fabriqué en impression 3D en PLA.</p>
                             <p><b>Fabriqué et assemblé par nous, au lycée</b>.</p>
@@ -724,7 +793,7 @@
                         <li>💪 <strong>Robustesse :</strong> Bois massif traité contre l'humidité</li>
                         <li>♻️ <strong>Écologie :</strong> Bois certifié PEFC (gestion durable des forêts)</li>
                         <li>⚖️ <strong>Poids :</strong> Environ 600 g (boîte vide)</li>
-                        <li>🎨 <strong>Finitions :</strong> Huile de lin naturelle + vernis mat</li>
+                        <li>🎨 <strong>Finitions :</strong> Saturateur contre l'humidité</li>
                     </ul>
                 </div>
             </div>
@@ -740,10 +809,10 @@
                     <h2>Les étapes de fabrication</h2>
                     
                     <h3>Étape 1 : Sélection du bois</h3>
-                    <p>Nous choisissons des planches de pin de qualité supérieure sans nœuds apparents. Chaque planche est vérifiée pour son taux d'humidité (< 12%) et sa rectitude.</p>
+                    <p>Nous avons choisi des planches de hêtre de qualité supérieure sans nœuds apparents. Chaque planche est vérifiée pour son taux d'humidité (< 12%) et sa rectitude.</p>
                     
                     <h3>Étape 2 : Découpe et assemblage</h3>
-                    <p>Sur la scie à ruban, nous découpons les pièces aux dimensions exactes (fond, couvercle, côtés). L'assemblage se fait par tenons-mortaises puis collage à la colle à bois professionnelle.</p>
+                    <p>Avec la scie circulaire, nous découpons les pièces aux dimensions exactes (fond, couvercle, côtés). L'assemblage se fait par queus droites puis collage à la colle à bois professionnelle.</p>
 
                     <h3>Étape 3 : Ponçage</h3>
                     <p>Trois passages de ponçage (grain 80, 120 puis 240) pour obtenir une surface parfaitement lisse. Cette étape demande patience et précision !</p>
@@ -752,21 +821,191 @@
                     <p>Nous imprimons le marqueur de sol et le compte point au lycée sur nos imprimantes 3D. Vient ensuite l'étape de l'ébavurage, important pour la qualité de la finition et la fonctionnalité. Dernière étape : l'assemblage du compte point et le marquage des nombres à l'encre noire.</p>
 
                     <h3>Étape 5 : Finitions</h3>
-                    <p>Application de deux couches d'huile de lin naturelle, séchage 24h entre chaque couche. Pose du fermoir métallique et du logo gravé au pyrograveur.</p>
+                    <p>Application d'une couche de saturateur. Pose du fermoir et des charnières métalliques. Préparation et pose de la poignée.</p>
+					
+					<h3>Étape 6 : Mousse de rangement</h3>
+                    <p>Découpe de la mousse. Empiècement à la défonceuse numérique. Contrôle.</p>
                     
-                    <h3>Étape 6 : Montage du kit</h3>
-                    <p>Nous assemblons tous les éléments dans la boîte : mètre, cochonnet, marqueur, compteur et chiffon. Un dernier contrôle qualité et c'est prêt !</p>
+                    <h3>Étape 7 : Montage du kit</h3>
+                    <p>Nous assemblons tous les éléments dans la boîte : mouuse de rangement, poignée, mètre, cochonnet, marqueur, compteur et chiffon. Un dernier contrôle qualité et c'est prêt !</p>
                 </div>
 
                 <div class="section">
                     <h2>Galerie de l'atelier</h2>
-                    <div class="gallery">
-                        <img src="media/images/atelier1.jpg" alt="Atelier menuiserie" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect width=%22300%22 height=%22250%22 fill=%22%238B5A3C%22/%3E%3Ctext x=%22150%22 y=%22130%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22%3EAtelier menuiserie%3C/text%3E%3C/svg%3E'">
-                        <img src="media/images/atelier2.jpg" alt="Découpe du bois" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect width=%22300%22 height=%22250%22 fill=%22%23E63946%22/%3E%3Ctext x=%22150%22 y=%22130%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22%3EDécoupe du bois%3C/text%3E%3C/svg%3E'">
-                        <img src="media/images/kb89-defonc-mousse.jpg" alt="Ponçage" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect width=%22300%22 height=%22250%22 fill=%22%23F1C40F%22/%3E%3Ctext x=%22150%22 y=%22130%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22%231D3557%22%3EPonçage%3C/text%3E%3C/svg%3E'">
-                        <img src="media/images/atelier4.jpg" alt="Finitions" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect width=%22300%22 height=%22250%22 fill=%22%2366BB6A%22/%3E%3Ctext x=%22150%22 y=%22130%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22%3EFinitions%3C/text%3E%3C/svg%3E'">
-                        <img src="media/images/kb89-compteur0.jpg" alt="Impression 3D" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22250%22%3E%3Crect width=%22300%22 height=%22250%22 fill=%22%234682B4%22/%3E%3Ctext x=%22150%22 y=%22130%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22%3EImpression 3D%3C/text%3E%3C/svg%3E'">
+
+                    <!-- CARROUSEL -->
+                    <div class="carousel-wrapper" id="carouselWrapper">
+                        <div class="carousel-main" id="carouselMain">
+                            <div class="carousel-loading" id="carouselLoading">⏳ Chargement de la galerie…</div>
+                            <div class="carousel-caption" id="carouselCaption"></div>
+                        </div>
+                        <button class="carousel-nav prev" id="btnPrev" onclick="carouselMove(-1)">&#8249;</button>
+                        <button class="carousel-nav next" id="btnNext" onclick="carouselMove(1)">&#8250;</button>
+                        <button class="carousel-fullscreen-btn" id="btnFS" onclick="openLightbox(carouselIdx)" title="Plein écran">⛶</button>
+                        <span class="carousel-counter" id="carouselCounter"></span>
+                        <div class="carousel-thumbnails" id="carouselThumbs"></div>
                     </div>
+
+                    <!-- LIGHTBOX -->
+                    <div class="lightbox" id="lightbox">
+                        <button class="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+                        <button class="lightbox-nav prev" onclick="lightboxMove(-1)">&#8249;</button>
+                        <img id="lbImg" src="" alt="" style="display:none">
+                        <video id="lbVideo" controls style="display:none"></video>
+                        <div class="lightbox-caption" id="lbCaption"></div>
+                        <button class="lightbox-nav next" onclick="lightboxMove(1)">&#8250;</button>
+                    </div>
+
+                    <script>
+                    /* =========================================================
+                       GALERIE — lit media/galerie/manifest.json
+                       Format minimal (alt optionnel) :
+                       [
+                         { "src": "media/galerie/galerie1.jpg" },
+                         { "src": "media/galerie/video1.mp4", "alt": "Description" }
+                       ]
+                    ========================================================= */
+                    const MANIFEST = 'media/galerie/manifest.json';
+                    let medias = [];
+                    let carouselIdx = 0;
+                    let autoTimer = null;
+
+                    function isVideo(src) { return /\.(mp4|webm|ogg)$/i.test(src); }
+                    /* Extrait le nom de fichier sans extension comme légende de secours */
+                    function labelOf(m) {
+                        return m.alt || m.src.split('/').pop().replace(/\.[^.]+$/, '').replace(/[-_]/g,' ');
+                    }
+
+                    /* ---- Construction ---- */
+                    function buildCarousel() {
+                        const main  = document.getElementById('carouselMain');
+                        const thumbs = document.getElementById('carouselThumbs');
+                        document.getElementById('carouselLoading').remove();
+                        ['btnPrev','btnNext','btnFS','carouselCounter'].forEach(id => {
+                            document.getElementById(id).style.display = 'flex';
+                        });
+                        document.getElementById('btnFS').style.display = 'block';
+                        document.getElementById('carouselCounter').style.display = 'block';
+
+                        medias.forEach((m, i) => {
+                            /* slide */
+                            const slide = document.createElement('div');
+                            slide.className = 'carousel-slide' + (i===0 ? ' active' : '');
+                            if (isVideo(m.src)) {
+                                const v = document.createElement('video');
+                                v.src = m.src; v.loop = true; v.muted = true; v.playsInline = true;
+                                if (i===0) v.play();
+                                slide.appendChild(v);
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = m.src; img.alt = labelOf(m);
+                                img.onclick = () => openLightbox(i);
+                                slide.appendChild(img);
+                            }
+                            main.insertBefore(slide, document.getElementById('carouselCaption'));
+
+                            /* miniature */
+                            const th = document.createElement('div');
+                            th.className = 'thumb' + (i===0 ? ' active' : '');
+                            th.onclick = () => carouselGoto(i);
+                            if (isVideo(m.src)) {
+                                const v = document.createElement('video');
+                                v.src = m.src; v.muted = true; v.preload = 'metadata';
+                                th.appendChild(v);
+                                const b = document.createElement('span');
+                                b.className = 'vbadge'; b.textContent = '▶';
+                                th.appendChild(b);
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = m.src; img.alt = labelOf(m);
+                                th.appendChild(img);
+                            }
+                            thumbs.appendChild(th);
+                        });
+
+                        updateUI();
+                        startAuto();
+                        const w = document.getElementById('carouselWrapper');
+                        w.addEventListener('mouseenter', () => clearInterval(autoTimer));
+                        w.addEventListener('mouseleave', startAuto);
+                    }
+
+                    /* ---- Navigation ---- */
+                    function carouselGoto(n) {
+                        const slides = document.querySelectorAll('.carousel-slide');
+                        const thumbs = document.querySelectorAll('.thumb');
+                        const outV = slides[carouselIdx].querySelector('video');
+                        if (outV) outV.pause();
+                        slides[carouselIdx].classList.remove('active');
+                        thumbs[carouselIdx].classList.remove('active');
+                        carouselIdx = (n + medias.length) % medias.length;
+                        slides[carouselIdx].classList.add('active');
+                        thumbs[carouselIdx].classList.add('active');
+                        thumbs[carouselIdx].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+                        const inV = slides[carouselIdx].querySelector('video');
+                        if (inV) inV.play();
+                        updateUI();
+                        restartAuto();
+                    }
+                    function carouselMove(d) { carouselGoto(carouselIdx + d); }
+                    function updateUI() {
+                        document.getElementById('carouselCaption').textContent = labelOf(medias[carouselIdx]);
+                        document.getElementById('carouselCounter').textContent = (carouselIdx+1)+' / '+medias.length;
+                    }
+                    function startAuto()   { autoTimer = setInterval(() => carouselMove(1), 4000); }
+                    function restartAuto() { clearInterval(autoTimer); startAuto(); }
+
+                    /* ---- Lightbox ---- */
+                    let lbIdx = 0;
+                    function openLightbox(i) {
+                        lbIdx = i; lbUpdate();
+                        document.getElementById('lightbox').classList.add('open');
+                        document.body.style.overflow = 'hidden';
+                    }
+                    function closeLightbox() {
+                        const v = document.getElementById('lbVideo');
+                        v.pause(); v.src = '';
+                        document.getElementById('lightbox').classList.remove('open');
+                        document.body.style.overflow = '';
+                    }
+                    function lightboxMove(d) { lbIdx=(lbIdx+d+medias.length)%medias.length; lbUpdate(); }
+                    function lbUpdate() {
+                        const m = medias[lbIdx];
+                        const img = document.getElementById('lbImg');
+                        const vid = document.getElementById('lbVideo');
+                        if (isVideo(m.src)) {
+                            img.style.display='none';
+                            vid.style.display=''; vid.src=m.src; vid.play();
+                        } else {
+                            vid.pause(); vid.src=''; vid.style.display='none';
+                            img.style.display=''; img.src=m.src; img.alt=labelOf(m);
+                        }
+                        document.getElementById('lbCaption').textContent = labelOf(m);
+                    }
+                    document.addEventListener('keydown', e => {
+                        const lb = document.getElementById('lightbox');
+                        if (!lb.classList.contains('open')) return;
+                        if (e.key==='Escape')      closeLightbox();
+                        if (e.key==='ArrowLeft')   lightboxMove(-1);
+                        if (e.key==='ArrowRight')  lightboxMove(1);
+                    });
+                    document.getElementById('lightbox').addEventListener('click', function(e){
+                        if (e.target===this) closeLightbox();
+                    });
+
+                    /* ---- Chargement manifest ---- */
+                    fetch(MANIFEST)
+                        .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+                        .then(data => {
+                            medias = data;
+                            if (!medias.length) throw new Error('vide');
+                            buildCarousel();
+                        })
+                        .catch(err => {
+                            document.getElementById('carouselLoading').innerHTML =
+                                '📷 Galerie bientôt disponible<br><small style="color:#666">(' + MANIFEST + ' introuvable ou vide)</small>';
+                        });
+                    </script>
                 </div>
             </div>
 
@@ -790,24 +1029,7 @@
                     </ul>
                 </div>
 
-                <div class="section">
-                    <h2>Options supplémentaires</h2>
-                    <div class="product-grid">
-                        <div class="product-item">
-                            <h3>✏️ Gravure personnalisée</h3>
-                            <p><strong>+10€</strong> - Faites graver un prénom, un message ou une date sur le couvercle de la boîte.</p>
-                        </div>
-                        <div class="product-item">
-                            <h3>🎨 Finition premium</h3>
-                            <p><strong>+15€</strong> - Vernis mat haute protection + intérieur velours rouge.</p>
-                        </div>
-                        <div class="product-item">
-                            <h3>📦 Livraison</h3>
-                            <p><strong>Gratuit</strong> en retrait au lycée ou <strong>+8€</strong> pour livraison à domicile (France métropolitaine).</p>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <div class="section">
 					<h2>Formulaire de pré-commande</h2>
 					<iframe 
@@ -936,6 +1158,4 @@
 
     </script>
 </body>
-
-<!-- Mirrored from kitdubouliste.vercel.app/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 20 May 2026 06:45:45 GMT -->
 </html>
